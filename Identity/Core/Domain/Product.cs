@@ -12,9 +12,17 @@ namespace Identity.Core.Domain
         public Product(string name, double price, string description, int categoryId)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
-            Price = price >= 0 ? price : throw new ArgumentOutOfRangeException(nameof(price));
+            Price = price > 0 ? price : throw new ArgumentOutOfRangeException(nameof(price));
             Description = description ?? throw new ArgumentNullException(nameof(description));
-            CategoryId = categoryId;
+            CategoryId = categoryId > 0 ? categoryId : throw new ArgumentOutOfRangeException(nameof(categoryId));
+        }
+
+        public void Edit(string name, double price, string description, int categoryId)
+        {
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            Price = price > 0 ? price : throw new ArgumentOutOfRangeException(nameof(price));
+            Description = description ?? throw new ArgumentNullException(nameof(description));
+            CategoryId = categoryId > 0 ? categoryId : throw new ArgumentOutOfRangeException(nameof(categoryId));
         }
     }
 }

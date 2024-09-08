@@ -1,5 +1,12 @@
+using FluentValidation;
+using Identity.Core.Application.Contracts;
+using Identity.Core.Application.Contracts.Persistence;
+using Identity.Core.Application.DTOs.ProductCategory.Validators;
+using Identity.Core.Application.Services;
 using Identity.Infrastructure.Persistence;
+using Identity.Infrastructure.Persistence.Repository;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +22,20 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
 
 #endregion
 
+#region Ioc
+
+builder.Services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddTransient<IProductCategoryRepository, ProductCategoryRepository>();
+builder.Services.AddTransient<IProductRepository, ProductRepository>();
+
+builder.Services.AddTransient<IProductCategoryService, ProductCategoryService>();
+builder.Services.AddTransient<IProductService, ProductService>();
+
+#endregion
+
+builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+builder.Services.AddValidatorsFromAssemblyContaining<ProductCategoryValidatorBase>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -28,6 +49,11 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "MyArea",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

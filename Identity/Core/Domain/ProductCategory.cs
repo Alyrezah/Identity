@@ -11,5 +11,10 @@ namespace Identity.Core.Domain
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Products = new List<Product>();
         }
+
+        public void Edit(string name)
+        {
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+        }
     }
 }
