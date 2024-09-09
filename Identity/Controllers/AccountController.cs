@@ -1,5 +1,7 @@
-﻿using Identity.Core.Application.Contracts.Identity;
+﻿using AutoMapper;
+using Identity.Core.Application.Contracts.Identity;
 using Identity.Core.Application.DTOs.Account;
+using Identity.Models.Account;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Identity.Controllers
@@ -7,9 +9,11 @@ namespace Identity.Controllers
     public class AccountController : Controller
     {
         private readonly IIdentityService _identityService;
-        public AccountController(IIdentityService identityService)
+        private readonly IMapper _mapper;
+        public AccountController(IIdentityService identityService, IMapper mapper)
         {
             _identityService = identityService;
+            _mapper = mapper;
         }
 
         #region Register
@@ -26,7 +30,7 @@ namespace Identity.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Register(RegisterAccountDto account)
+        public async Task<ActionResult> Register(RegisterViewModel account)
         {
             try
             {
@@ -35,7 +39,8 @@ namespace Identity.Controllers
                     return RedirectToAction(actionName: "Index", controllerName: "Home");
                 }
 
-                var result = await _identityService.RgisterAccount(account);
+                var registerAccountDto = _mapper.Map<RegisterAccountDto>(account);
+                var result = await _identityService.RgisterAccount(registerAccountDto);
 
                 if (result.IsSuccess)
                 {
@@ -79,6 +84,7 @@ namespace Identity.Controllers
                     return RedirectToAction(actionName: "Index", controllerName: "Home");
                 }
 
+                ViewData["returnUrl"] = returnUrl;
                 var result = await _identityService.LoginAccount(account);
 
                 if (result.IsSuccess)
@@ -111,6 +117,34 @@ namespace Identity.Controllers
         {
             await _identityService.Logout();
             return RedirectToAction(actionName: "Index", controllerName: "Home");
+        }
+
+        #endregion
+
+        #region Remote Validations
+
+        public async Task<ActionResult> IsEmailAlredyExist(string email)
+        {
+            var isExist = await _identityService.IsEmailAlreadyExist(email);
+
+            if (isExist)
+            {
+                return Json("The email entered has already been registered");
+            }
+
+            return Json(true);
+        }
+
+        public async Task<ActionResult> IsUserNameAlredyExist(string username)
+        {
+            var isExist = await _identityService.IsUserNameAlreadyExist(username);
+
+            if (isExist)
+            {
+                return Json("The username entered has already been registered");
+            }
+
+            return Json(true);
         }
 
         #endregion

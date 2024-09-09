@@ -45,9 +45,15 @@ builder.Services.AddTransient<IIdentityService, IdentityService>();
 
 #region Identity
 
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
-    .AddEntityFrameworkStores<IdentityContext>()
+builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+{
+    options.User.RequireUniqueEmail = true;
+    options.SignIn.RequireConfirmedEmail = true;
+    options.Lockout.MaxFailedAccessAttempts = 3;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromSeconds(60);
+}).AddEntityFrameworkStores<IdentityContext>()
     .AddDefaultTokenProviders();
+    /*.AddErrorDescriber<PersianIdentityErrorDescriber>();*/
 
 #endregion
 
