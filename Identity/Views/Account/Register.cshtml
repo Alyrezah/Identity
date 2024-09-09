@@ -1,0 +1,64 @@
+﻿@using Identity.Core.Application.DTOs.Account;
+@model RegisterAccountDto
+@{
+    ViewData["Title"] = "Register";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<div class="row d-flex justify-content-center align-items-center h-100">
+    <div class="col-12 col-md-9 col-lg-7 col-xl-6">
+        <div class="card" style="border-radius: 15px;">
+            <div class="card-body p-5">
+                <h2 class="text-uppercase text-center mb-5">Create an account</h2>
+
+                <form asp-action="Register" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div data-mdb-input-init="" class="form-outline mb-4">
+                        <input type="text" asp-for="UserName" class="form-control form-control-lg">
+                        <label class="form-label" asp-for="UserName">UserName</label>
+                    </div>
+
+                    <div data-mdb-input-init="" class="form-outline mb-4">
+                        <input type="email" asp-for="Email" class="form-control form-control-lg">
+                        <label class="form-label" asp-for="Email">Your Email</label>
+                    </div>
+
+                    <div data-mdb-input-init="" class="form-outline mb-4">
+                        <input type="text" asp-for="PhoneNumber" class="form-control form-control-lg">
+                        <label class="form-label" asp-for="PhoneNumber">Mobile</label>
+                    </div>
+
+                    <div data-mdb-input-init="" class="form-outline mb-4">
+                        <input type="password" asp-for="Password" class="form-control form-control-lg">
+                        <label class="form-label" asp-for="Password">Password</label>
+                    </div>
+
+                    <div data-mdb-input-init="" class="form-outline mb-4">
+                        <input type="password" asp-for="RePassword" class="form-control form-control-lg">
+                        <label class="form-label" asp-for="RePassword">Repeat your password</label>
+                    </div>
+
+                    <div class="form-check d-flex justify-content-center mb-5">
+                        <input class="form-check-input me-2" type="checkbox" value="" id="form2Example3cg">
+                        <label class="form-check-label" for="form2Example3g">
+                            I agree all statements in <a href="#!" class="text-body"><u>Terms of service</u></a>
+                        </label>
+                    </div>
+
+                    <div class="d-flex justify-content-center">
+                        <button type="submit" data-mdb-button-init="" data-mdb-ripple-init="" class="btn btn-success btn-block btn-md gradient-custom-4 text-body">Register</button>
+                    </div>
+
+                    <p class="text-center text-muted mt-5 mb-0">Have already an account? <a asp-action="Login" class="fw-bold text-body"><u>Login here</u></a></p>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,9 +1,11 @@
 using FluentValidation;
 using Identity.Core.Application.Contracts;
+using Identity.Core.Application.Contracts.Identity;
 using Identity.Core.Application.Contracts.Persistence;
 using Identity.Core.Application.DTOs.ProductCategory.Validators;
 using Identity.Core.Application.Services;
 using Identity.Infrastructure.Idnetity;
+using Identity.Infrastructure.Idnetity.Services;
 using Identity.Infrastructure.Persistence;
 using Identity.Infrastructure.Persistence.Repository;
 using Microsoft.AspNetCore.Identity;
@@ -37,6 +39,7 @@ builder.Services.AddTransient<IProductRepository, ProductRepository>();
 
 builder.Services.AddTransient<IProductCategoryService, ProductCategoryService>();
 builder.Services.AddTransient<IProductService, ProductService>();
+builder.Services.AddTransient<IIdentityService, IdentityService>();
 
 #endregion
 

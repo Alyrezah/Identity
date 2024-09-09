@@ -45,19 +45,18 @@ namespace Identity.Areas.Administrator.Controllers
         {
             try
             {
-                if (ModelState.IsValid)
-                {
-                    var result = await _productCategoryService.Create(productCategory);
-                    if (result.IsSuccess)
-                    {
-                        return RedirectToAction(nameof(Index));
-                    }
 
-                    foreach (var error in result.ErrorMessages)
-                    {
-                        ModelState.AddModelError(string.Empty, error);
-                    }
+                var result = await _productCategoryService.Create(productCategory);
+                if (result.IsSuccess)
+                {
+                    return RedirectToAction(nameof(Index));
                 }
+
+                foreach (var error in result.ErrorMessages)
+                {
+                    ModelState.AddModelError(string.Empty, error);
+                }
+
                 return View(productCategory);
             }
             catch

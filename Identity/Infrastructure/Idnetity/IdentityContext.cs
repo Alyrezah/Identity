@@ -44,7 +44,7 @@ namespace Identity.Infrastructure.Idnetity
                     NormalizedEmail = "ALIREZA80HEYDRI@GMAIL.COM",
                     EmailConfirmed = true,
                     UserName = "Alyrezah",
-                    NormalizedUserName = "ALIREZAH",
+                    NormalizedUserName = "ALYREZAH",
                     PasswordHash = hasher.HashPassword(null,"Alirezasaina12#"),
                     PhoneNumber = "09167584020",
                     PhoneNumberConfirmed = true,
