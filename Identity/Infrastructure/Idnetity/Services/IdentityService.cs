@@ -1,9 +1,15 @@
 ﻿using AutoMapper;
+using Azure.Core;
 using Identity.Core.Application;
 using Identity.Core.Application.Contracts.Identity;
+using Identity.Core.Application.Contracts.Infrastructure;
 using Identity.Core.Application.DTOs.Account;
 using Identity.Core.Application.DTOs.Account.Validators;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Routing;
 
 namespace Identity.Infrastructure.Idnetity.Services
 {
@@ -12,18 +18,51 @@ namespace Identity.Infrastructure.Idnetity.Services
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly IMapper _mapper;
-        public IdentityService(UserManager<IdentityUser> userManager, IMapper mapper, SignInManager<IdentityUser> signInManager)
+        private readonly IMessageSender _messageSender;
+        public IdentityService(UserManager<IdentityUser> userManager, IMapper mapper,
+            SignInManager<IdentityUser> signInManager, IMessageSender messageSender)
         {
             _userManager = userManager;
             _mapper = mapper;
             _signInManager = signInManager;
+            _messageSender = messageSender;
+        }
+
+        public async Task<CommandResponse> ConfirmEmail(string userName, string token)
+        {
+            var user = await _userManager.FindByNameAsync(userName);
+            if (user == null)
+            {
+                return new CommandResponse()
+                {
+                    IsSuccess = false,
+                    Message = CommandMessages.CommandFailer,
+                    ErrorMessages = new List<string>() { "User Not Found ..." }
+                };
+            }
+            await _userManager.ConfirmEmailAsync(user, token);
+            return new CommandResponse()
+            {
+                IsSuccess = true,
+                Message = CommandMessages.CommandSuccess,
+            };
+        }
+
+        public AuthenticationProperties ConfigureExternalLoginProperties(string provider, string returnUrl)
+        {
+            return _signInManager.ConfigureExternalAuthenticationProperties(provider, returnUrl);
+        }
+
+        public async Task<List<AuthenticationScheme>> GetExternalLogins()
+        {
+            return (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
         }
 
         public async Task<bool> IsEmailAlreadyExist(string email)
         {
             var user = await _userManager.FindByEmailAsync(email);
 
-           return user != null;
+            return user != null;
         }
 
         public async Task<bool> IsUserNameAlreadyExist(string userName)
@@ -141,7 +180,7 @@ namespace Identity.Infrastructure.Idnetity.Services
             }
 
             var newUser = _mapper.Map<IdentityUser>(command);
-            newUser.EmailConfirmed = true;
+            //newUser.EmailConfirmed = true;
             if (command.PhoneNumber != null)
             {
                 newUser.PhoneNumberConfirmed = true;
@@ -154,14 +193,99 @@ namespace Identity.Infrastructure.Idnetity.Services
                 {
                     IsSuccess = false,
                     Message = CommandMessages.CommandFailer,
-                    ErrorMessages = result.Errors.Select(x=>x.Description).ToList()
+                    ErrorMessages = result.Errors.Select(x => x.Description).ToList()
                 };
             }
+
+            #region Send Email
+
+            var emailConfirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(newUser);
+
+            var emailLink = $"https://localhost:7040/Account/ConfirmEmail?username={newUser.UserName}&token={emailConfirmationToken}";
+
+            _messageSender.SendEmail(command.Email, "ConfirmationEmail", emailLink);
+
+            #endregion
+
 
             return new CommandResponse()
             {
                 IsSuccess = true,
                 Message = CommandMessages.CommandSuccess
+            };
+        }
+
+        public async Task<ExternalLoginInfo> GetExternalLoginInfo()
+        {
+#pragma warning disable CS8603 // Possible null reference return.
+            return await _signInManager.GetExternalLoginInfoAsync();
+#pragma warning restore CS8603 // Possible null reference return.
+        }
+
+        public async Task<CommandResponse> ExternalLogin(ExternalLoginInfo externalLoginInfo)
+        {
+            var result = await _signInManager.ExternalLoginSignInAsync(externalLoginInfo.LoginProvider,
+                externalLoginInfo.ProviderKey, true, true);
+
+            if (result.Succeeded)
+            {
+                return new CommandResponse()
+                {
+                    IsSuccess = true,
+                    Message = CommandMessages.CommandSuccess
+                };
+            }
+
+            if (result.IsLockedOut)
+            {
+                return new CommandResponse()
+                {
+                    IsSuccess = false,
+                    Message = CommandMessages.CommandFailer,
+                    ErrorMessages = new List<string>() { "Your account has been locked for 5 minutes due to repeated requests." }
+                };
+            }
+
+            if (result.IsNotAllowed)
+            {
+                return new CommandResponse()
+                {
+                    IsSuccess = false,
+                    Message = CommandMessages.CommandFailer,
+                    ErrorMessages = new List<string>() { "You are not allowed to enter" }
+                };
+            }
+
+            return new CommandResponse()
+            {
+                IsSuccess = false,
+                Message = CommandMessages.CommandFailer,
+                ErrorMessages = new List<string>() { "The information entered is incorrect." }
+            };
+        }
+
+        public async Task<CommandResponse> RegisterUserWithExternalLogin(string email,ExternalLoginInfo externalLoginInfo)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null)
+            {
+                var userName = email.Split('@')[0];
+                user = new IdentityUser()
+                {
+                    Email = email,
+                    UserName = userName,
+                    EmailConfirmed = true,
+                };
+                await _userManager.CreateAsync(user);
+            }
+            await _userManager.AddLoginAsync(user,externalLoginInfo);
+            await _signInManager.SignInAsync(user, true);
+
+            return new CommandResponse()
+            {
+                IsSuccess = true,
+                Message = CommandMessages.CommandSuccess,
             };
         }
     }

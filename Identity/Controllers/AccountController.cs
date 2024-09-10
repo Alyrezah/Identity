@@ -3,6 +3,7 @@ using Identity.Core.Application.Contracts.Identity;
 using Identity.Core.Application.DTOs.Account;
 using Identity.Models.Account;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Identity.Controllers
 {
@@ -52,8 +53,9 @@ namespace Identity.Controllers
                 }
                 return View(account);
             }
-            catch
+            catch (Exception ex)
             {
+                ModelState.AddModelError(string.Empty, ex.Message);
                 return View();
             }
         }
@@ -63,19 +65,24 @@ namespace Identity.Controllers
         #region Login
 
         [HttpGet]
-        public ActionResult Login(string? returnUrl = null)
+        public async Task<ActionResult> Login(string? returnUrl = null)
         {
             if (User.Identity!.IsAuthenticated)
             {
                 return RedirectToAction(actionName: "Index", controllerName: "Home");
             }
+            var model = new LoginViewModel()
+            {
+                ReturnUrl = returnUrl,
+                ExternalLogin = await _identityService.GetExternalLogins()
+            };
             ViewData["returnUrl"] = returnUrl;
-            return View();
+            return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Login(LoginAccountDto account, string? returnUrl = null)
+        public async Task<ActionResult> Login(LoginViewModel account, string? returnUrl = null)
         {
             try
             {
@@ -83,9 +90,11 @@ namespace Identity.Controllers
                 {
                     return RedirectToAction(actionName: "Index", controllerName: "Home");
                 }
-
+                account.ReturnUrl = returnUrl;
+                account.ExternalLogin = await _identityService.GetExternalLogins();
                 ViewData["returnUrl"] = returnUrl;
-                var result = await _identityService.LoginAccount(account);
+                var loginDto = _mapper.Map<LoginAccountDto>(account);
+                var result = await _identityService.LoginAccount(loginDto);
 
                 if (result.IsSuccess)
                 {
@@ -101,8 +110,9 @@ namespace Identity.Controllers
                 }
                 return View(account);
             }
-            catch
+            catch (Exception ex)
             {
+                ModelState.AddModelError(string.Empty, ex.Message);
                 return View();
             }
         }
@@ -123,6 +133,8 @@ namespace Identity.Controllers
 
         #region Remote Validations
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<ActionResult> IsEmailAlredyExist(string email)
         {
             var isExist = await _identityService.IsEmailAlreadyExist(email);
@@ -135,6 +147,8 @@ namespace Identity.Controllers
             return Json(true);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<ActionResult> IsUserNameAlredyExist(string username)
         {
             var isExist = await _identityService.IsUserNameAlreadyExist(username);
@@ -145,6 +159,70 @@ namespace Identity.Controllers
             }
 
             return Json(true);
+        }
+
+        #endregion
+
+        #region Confirm Email
+
+        public async Task<ActionResult> ConfirmEmail(string username, string token)
+        {
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(token))
+            {
+                return NotFound();
+            }
+            var result = await _identityService.ConfirmEmail(username, token);
+
+            return Content(result.Message);
+        }
+
+        #endregion
+
+        #region External Login
+
+        [HttpPost]
+        public ActionResult ExternalLogin(string provider, string returnUrl)
+        {
+            var redirectUrl = Url.Action(action: "ExternalLoginCallBack", controller: "Account",
+                values: new { ReturnUrl = returnUrl });
+
+            var properties = _identityService.ConfigureExternalLoginProperties(provider, redirectUrl);
+            return new ChallengeResult(provider, properties);
+        }
+
+        public async Task<ActionResult> ExternalLoginCallBack(string? returnUrl = null,  string? remoteError = null)
+        {
+
+            returnUrl =
+                (returnUrl != null && Url.IsLocalUrl(returnUrl)) ? returnUrl : Url.Content("~/");
+
+            if (remoteError != null)
+            {
+                return BadRequest(remoteError);
+            }
+
+            var exLoginInfo = await _identityService.GetExternalLoginInfo();
+
+            if (exLoginInfo == null)
+            {
+                return BadRequest();
+            }
+
+            var result = await _identityService.ExternalLogin(exLoginInfo);
+
+            if (result.IsSuccess)
+            {
+                return Redirect(returnUrl);
+            }
+
+            var email = exLoginInfo.Principal.FindFirstValue(ClaimTypes.Email);
+            if (email == null)
+            {
+                return BadRequest();
+            }
+
+            await _identityService.RegisterUserWithExternalLogin(email, exLoginInfo);
+            return Redirect(returnUrl);
         }
 
         #endregion

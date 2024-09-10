@@ -1,9 +1,11 @@
 using FluentValidation;
 using Identity.Core.Application.Contracts;
 using Identity.Core.Application.Contracts.Identity;
+using Identity.Core.Application.Contracts.Infrastructure;
 using Identity.Core.Application.Contracts.Persistence;
 using Identity.Core.Application.DTOs.ProductCategory.Validators;
 using Identity.Core.Application.Services;
+using Identity.Infrastructure;
 using Identity.Infrastructure.Idnetity;
 using Identity.Infrastructure.Idnetity.Services;
 using Identity.Infrastructure.Persistence;
@@ -16,6 +18,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpContextAccessor();
 
 #region Db Contexts
 
@@ -41,6 +44,8 @@ builder.Services.AddTransient<IProductCategoryService, ProductCategoryService>()
 builder.Services.AddTransient<IProductService, ProductService>();
 builder.Services.AddTransient<IIdentityService, IdentityService>();
 
+builder.Services.AddTransient<IMessageSender, MessageSender>();
+
 #endregion
 
 #region Identity
@@ -53,7 +58,14 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromSeconds(60);
 }).AddEntityFrameworkStores<IdentityContext>()
     .AddDefaultTokenProviders();
-    /*.AddErrorDescriber<PersianIdentityErrorDescriber>();*/
+/*.AddErrorDescriber<PersianIdentityErrorDescriber>();*/
+
+builder.Services.AddAuthentication()
+    .AddGoogle(options =>
+    {
+        options.ClientId = "491550122729-q1tjfmiidn0493bnllp6j2upqd8uoums.apps.googleusercontent.com";
+        options.ClientSecret = "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";
+    });
 
 #endregion
 

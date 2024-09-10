@@ -1,5 +1,5 @@
-﻿@using Identity.Core.Application.DTOs.Account
-@model LoginAccountDto
+﻿@using Identity.Models.Account
+@model LoginViewModel
 @{
     ViewData["Title"] = "Login";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -33,12 +33,29 @@
 
                     <div class="d-flex justify-content-center">
                         <button type="submit" data-mdb-button-init="" data-mdb-ripple-init="" class="btn btn-success btn-block btn-md gradient-custom-4 text-body">Login</button>
+
                     </div>
 
                     <p class="text-center text-muted mt-5 mb-0">Register? <a asp-action="Register" class="fw-bold text-body"><u>Register now</u></a></p>
 
                 </form>
+                @if (Model.ExternalLogin.Any())
+                {
+                    <div class="d-flex justify-content-center">
+                        <form asp-action="ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post">
 
+                            @foreach (var item in Model.ExternalLogin)
+                            {
+                                <button type="submit" data-mdb-button-init="" value="@item.Name" title="Login With Google" name="provider"
+                                        data-mdb-ripple-init="" class="btn btn-primary btn-block btn-md gradient-custom-4 text-body">
+                                    @item.DisplayName
+                                </button>
+
+                            }
+
+                        </form>
+                    </div>
+                }
             </div>
         </div>
     </div>
