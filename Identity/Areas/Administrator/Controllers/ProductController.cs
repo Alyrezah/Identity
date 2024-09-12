@@ -1,11 +1,13 @@
 ﻿using Identity.Core.Application.Contracts;
 using Identity.Core.Application.DTOs.Product;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Identity.Areas.Administrator.Controllers
 {
     [Area("Administrator")]
+    [Authorize(Roles = "Admin,Owner")]
     public class ProductController : Controller
     {
         private readonly IProductService _productService;

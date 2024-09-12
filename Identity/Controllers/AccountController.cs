@@ -226,5 +226,12 @@ namespace Identity.Controllers
         }
 
         #endregion
+
+
+
+        public ActionResult AccessDenied()
+        {
+            return View();
+        }
     }
 }

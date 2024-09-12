@@ -1,5 +1,6 @@
 using FluentValidation;
 using Identity.Core.Application.Contracts;
+using Identity.Core.Application.Contracts.Acccount;
 using Identity.Core.Application.Contracts.Identity;
 using Identity.Core.Application.Contracts.Infrastructure;
 using Identity.Core.Application.Contracts.Persistence;
@@ -43,6 +44,7 @@ builder.Services.AddTransient<IProductRepository, ProductRepository>();
 builder.Services.AddTransient<IProductCategoryService, ProductCategoryService>();
 builder.Services.AddTransient<IProductService, ProductService>();
 builder.Services.AddTransient<IIdentityService, IdentityService>();
+builder.Services.AddTransient<IAccountService, AccountService>();
 
 builder.Services.AddTransient<IMessageSender, MessageSender>();
 

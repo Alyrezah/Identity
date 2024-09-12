@@ -9,6 +9,8 @@ namespace Identity.Infrastructure.Idnetity.Profiles
         public AutoMapperProfile()
         {
             CreateMap<IdentityUser,RegisterAccountDto>().ReverseMap();
+            CreateMap<IdentityUser,AccountDto>().ReverseMap();
+            CreateMap<IdentityRole,RoleDto>().ReverseMap();
         }
     }
 }
