@@ -1,4 +1,5 @@
-﻿using Identity.Core.Application.Contracts;
+﻿using Identity.Core.Application.ClaimsStore;
+using Identity.Core.Application.Contracts;
 using Identity.Core.Application.DTOs.Product;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +8,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 namespace Identity.Areas.Administrator.Controllers
 {
     [Area("Administrator")]
-    [Authorize(Roles = "Admin,Owner")]
     public class ProductController : Controller
     {
         private readonly IProductService _productService;
@@ -20,6 +20,7 @@ namespace Identity.Areas.Administrator.Controllers
 
 
         // GET: ProductController
+        [Authorize(Policy = ClaimTypesStore.ProductsList)]
         public async Task<ActionResult> Index()
         {
             var model = await _productService.GetList();
@@ -27,6 +28,7 @@ namespace Identity.Areas.Administrator.Controllers
         }
 
         // GET: ProductController/Details/5
+        [Authorize(Policy = ClaimTypesStore.DetailProduct)]
         public async Task<ActionResult> Details(int id)
         {
             var model = await _productService.GetBy(id);
@@ -38,6 +40,7 @@ namespace Identity.Areas.Administrator.Controllers
         }
 
         // GET: ProductController/Create
+        [Authorize(Policy = ClaimTypesStore.CreateProduct)]
         public async Task<ActionResult> Create()
         {
             return View(new CreateProductDto()
@@ -47,6 +50,7 @@ namespace Identity.Areas.Administrator.Controllers
         }
 
         // POST: ProductController/Create
+        [Authorize(Policy = ClaimTypesStore.CreateProduct)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Create(CreateProductDto product)
@@ -74,6 +78,7 @@ namespace Identity.Areas.Administrator.Controllers
         }
 
         // GET: ProductController/Edit/5
+        [Authorize(Policy = ClaimTypesStore.EditProduct)]
         public async Task<ActionResult> Edit(int id)
         {
             var model = await _productService.GetForUpdate(id);
@@ -86,6 +91,7 @@ namespace Identity.Areas.Administrator.Controllers
         }
 
         // POST: ProductController/Edit/5
+        [Authorize(Policy = ClaimTypesStore.EditProduct)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Edit(int id, UpdateProductDto product)

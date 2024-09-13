@@ -1,4 +1,5 @@
 using FluentValidation;
+using Identity.Core.Application.ClaimsStore;
 using Identity.Core.Application.Contracts;
 using Identity.Core.Application.Contracts.Acccount;
 using Identity.Core.Application.Contracts.Identity;
@@ -68,6 +69,72 @@ builder.Services.AddAuthentication()
         options.ClientId = "491550122729-q1tjfmiidn0493bnllp6j2upqd8uoums.apps.googleusercontent.com";
         options.ClientSecret = "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";
     });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ProductCategoriesList", p =>
+    {
+        p.RequireClaim(claimType: ClaimTypesStore.ProductCategoriesList, allowedValues: true.ToString());
+    });
+    options.AddPolicy("CreateProductCategory", p =>
+    {
+        p.RequireClaim(claimType: ClaimTypesStore.CreateProductCategory, allowedValues: true.ToString());
+    });
+    options.AddPolicy("EditProductCategory", p =>
+    {
+        p.RequireClaim(claimType: ClaimTypesStore.EditProductCategory, allowedValues: true.ToString());
+    });
+    options.AddPolicy("DetailProductCategory", p =>
+    {
+        p.RequireClaim(claimType: ClaimTypesStore.DetailProductCategory, allowedValues: true.ToString());
+    });
+    options.AddPolicy("ProductsList", p =>
+    {
+        p.RequireClaim(claimType: ClaimTypesStore.ProductsList, allowedValues: true.ToString());
+    });
+    options.AddPolicy("CreateProduct", p =>
+    {
+        p.RequireClaim(claimType: ClaimTypesStore.CreateProduct, allowedValues: true.ToString());
+    });
+    options.AddPolicy("EditProduct", p =>
+    {
+        p.RequireClaim(claimType: ClaimTypesStore.EditProduct, allowedValues: true.ToString());
+    });
+    options.AddPolicy("DetailProduct", p =>
+    {
+        p.RequireClaim(claimType: ClaimTypesStore.DetailProduct, allowedValues: true.ToString());
+    });
+    options.AddPolicy("AccountsList", p =>
+    {
+        p.RequireAssertion(c => c.User.IsInRole("Owner") ||
+            c.User.HasClaim(ClaimTypesStore.AccountsList, true.ToString()));
+    });
+    options.AddPolicy("DetailAccount", p =>
+    {
+        p.RequireAssertion(c => c.User.IsInRole("Owner") ||
+           c.User.HasClaim(ClaimTypesStore.DetailAccount, true.ToString()));
+    });
+    options.AddPolicy("ManageUserRole", p =>
+    {
+        p.RequireAssertion(c => c.User.IsInRole("Owner") ||
+          c.User.HasClaim(ClaimTypesStore.ManageUserRole, true.ToString()));
+    });
+    options.AddPolicy("Roles", p =>
+    {
+        p.RequireAssertion(c => c.User.IsInRole("Owner") ||
+          c.User.HasClaim(ClaimTypesStore.Roles, true.ToString()));
+    });
+    options.AddPolicy("AddClaims", p =>
+    {
+        p.RequireAssertion(c => c.User.IsInRole("Owner") ||
+        c.User.HasClaim(ClaimTypesStore.AddClaims, true.ToString()));
+    });
+    options.AddPolicy("RemoveClaims", p =>
+    {
+        p.RequireAssertion(c => c.User.IsInRole("Owner") ||
+    c.User.HasClaim(ClaimTypesStore.RemoveClaims, true.ToString()));
+    });
+});
 
 #endregion
 

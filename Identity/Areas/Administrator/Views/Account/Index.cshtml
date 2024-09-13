@@ -48,9 +48,10 @@
                     </td>
                 }
                 <td>
-                    @Html.ActionLink("ManageUserRoles", "ManageUserRoles", new { id = item.Id }) |
                     @Html.ActionLink("Details", "Details", new { id = item.Id }) |
-                    @Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ })
+                    @Html.ActionLink("ManageUserRoles", "ManageUserRoles", new { id = item.Id }) |
+                    @Html.ActionLink("AddClaims", "AddClaims", new { id = item.Id }) |
+                    @Html.ActionLink("RemoveClaims", "RemoveClaims", new { id = item.Id })
                 </td>
             </tr>
         }
