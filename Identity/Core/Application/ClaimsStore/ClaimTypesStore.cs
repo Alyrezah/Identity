@@ -18,5 +18,7 @@
         public const string Roles = "Roles";
         public const string AddClaims = "AddClaims";
         public const string RemoveClaims = "RemoveClaims";
+
+        public const string AdministratorPanel = "AdministratorPanel";
     }
 }

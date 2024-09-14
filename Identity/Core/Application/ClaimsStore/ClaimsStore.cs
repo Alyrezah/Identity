@@ -22,6 +22,9 @@ namespace Identity.Core.Application.ClaimsStore
             new(ClaimTypesStore.CreateProduct,true.ToString()),
             new(ClaimTypesStore.EditProduct,true.ToString()),
             new(ClaimTypesStore.DetailProduct,true.ToString()),
+
+
+            new(ClaimTypesStore.DetailProduct,true.ToString()),
         ];
     }
 }

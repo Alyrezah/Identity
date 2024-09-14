@@ -12,6 +12,8 @@ using Identity.Infrastructure.Idnetity;
 using Identity.Infrastructure.Idnetity.Services;
 using Identity.Infrastructure.Persistence;
 using Identity.Infrastructure.Persistence.Repository;
+using Identity.Security.Default;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
@@ -134,7 +136,13 @@ builder.Services.AddAuthorization(options =>
         p.RequireAssertion(c => c.User.IsInRole("Owner") ||
     c.User.HasClaim(ClaimTypesStore.RemoveClaims, true.ToString()));
     });
+    options.AddPolicy("ClaimRequirement", p =>
+    {
+        p.Requirements.Add(new ClaimRequirement(ClaimTypesStore.AdministratorPanel, true.ToString()));
+    });
 });
+
+builder.Services.AddSingleton<IAuthorizationHandler, ClaimRequirementHandler>();
 
 #endregion
 
