@@ -264,19 +264,24 @@ namespace Identity.Infrastructure.Idnetity.Services
             };
         }
 
-        public async Task<CommandResponse> RegisterUserWithExternalLogin(string email,ExternalLoginInfo externalLoginInfo)
+        public async Task<CommandResponse> RegisterUserWithExternalLogin(string email , 
+            RegisterWithExternalLoginDto command,ExternalLoginInfo externalLoginInfo)
         {
             var user = await _userManager.FindByEmailAsync(email);
 
             if (user == null)
             {
-                var userName = email.Split('@')[0];
                 user = new IdentityUser()
                 {
                     Email = email,
-                    UserName = userName,
+                    UserName = command.UserName,
+                    PhoneNumber = command.PhoneNumber,
                     EmailConfirmed = true,
                 };
+                if (command.PhoneNumber != null)
+                {
+                    user.PhoneNumberConfirmed = true;
+                }
                 await _userManager.CreateAsync(user);
             }
             await _userManager.AddLoginAsync(user,externalLoginInfo);

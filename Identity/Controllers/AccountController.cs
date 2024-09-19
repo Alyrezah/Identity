@@ -3,6 +3,7 @@ using Identity.Core.Application.Contracts.Identity;
 using Identity.Core.Application.DTOs.Account;
 using Identity.Models.Account;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using System.Security.Claims;
 
 namespace Identity.Controllers
@@ -190,11 +191,11 @@ namespace Identity.Controllers
             return new ChallengeResult(provider, properties);
         }
 
-        public async Task<ActionResult> ExternalLoginCallBack(string? returnUrl = null,  string? remoteError = null)
+        [HttpGet]
+        public async Task<ActionResult> ExternalLoginCallBack(string? returnUrl = null, string? remoteError = null)
         {
 
-            returnUrl =
-                (returnUrl != null && Url.IsLocalUrl(returnUrl)) ? returnUrl : Url.Content("~/");
+            returnUrl = (returnUrl != null && Url.IsLocalUrl(returnUrl)) ? returnUrl : Url.Content("~/");
 
             if (remoteError != null)
             {
@@ -221,7 +222,32 @@ namespace Identity.Controllers
                 return BadRequest();
             }
 
-            await _identityService.RegisterUserWithExternalLogin(email, exLoginInfo);
+            return View();
+            //await _identityService.RegisterUserWithExternalLogin(email, exLoginInfo);
+            //return Redirect(returnUrl);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> ExternalLoginCallBack(RegisterWithExternalLoginDto account, string? returnUrl = null)
+        {
+            returnUrl = (returnUrl != null && Url.IsLocalUrl(returnUrl)) ? returnUrl : Url.Content("~/");
+            ViewData["returnUrl"] = returnUrl;
+
+            var exLoginInfo = await _identityService.GetExternalLoginInfo();
+
+            if (exLoginInfo == null)
+            {
+                return BadRequest();
+            }
+
+            var email = exLoginInfo.Principal.FindFirstValue(ClaimTypes.Email);
+            if (email == null)
+            {
+                return BadRequest();
+            }
+
+            await _identityService.RegisterUserWithExternalLogin(email, account, exLoginInfo);
             return Redirect(returnUrl);
         }
 
