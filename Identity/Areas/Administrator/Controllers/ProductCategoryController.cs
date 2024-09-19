@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Identity.Areas.Administrator.Controllers
 {
     [Area("Administrator")]
+    [Authorize(Policy = "DynamicRole")]
     public class ProductCategoryController : Controller
     {
         private readonly IProductCategoryService _productCategoryService;
@@ -17,7 +18,7 @@ namespace Identity.Areas.Administrator.Controllers
 
 
         // GET: ProductCategoryController
-        [Authorize(Policy = ClaimTypesStore.ProductCategoriesList)]
+       // [Authorize(Policy = ClaimTypesStore.ProductCategoriesList)]
         public async Task<ActionResult> Index()
         {
             var model = await _productCategoryService.GetList();
@@ -25,7 +26,7 @@ namespace Identity.Areas.Administrator.Controllers
         }
 
         // GET: ProductCategoryController/Details/5
-        [Authorize(Policy = ClaimTypesStore.DetailProductCategory)]
+       // [Authorize(Policy = ClaimTypesStore.DetailProductCategory)]
         public async Task<ActionResult> Details(int id)
         {
             var model = await _productCategoryService.GetBy(id);
@@ -37,14 +38,14 @@ namespace Identity.Areas.Administrator.Controllers
         }
 
         // GET: ProductCategoryController/Create
-        [Authorize(Policy = ClaimTypesStore.CreateProductCategory)]
+       // [Authorize(Policy = ClaimTypesStore.CreateProductCategory)]
         public ActionResult Create()
         {
             return View();
         }
 
         // POST: ProductCategoryController/Create
-        [Authorize(Policy = ClaimTypesStore.CreateProductCategory)]
+       // [Authorize(Policy = ClaimTypesStore.CreateProductCategory)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Create(CreateProductCategoryDto productCategory)
@@ -72,7 +73,7 @@ namespace Identity.Areas.Administrator.Controllers
         }
 
         // GET: ProductCategoryController/Edit/5
-        [Authorize(Policy = ClaimTypesStore.EditProductCategory)]
+       // [Authorize(Policy = ClaimTypesStore.EditProductCategory)]
         public async Task<ActionResult> Edit(int id)
         {
             var model = await _productCategoryService.GetForUpdate(id);
@@ -84,7 +85,7 @@ namespace Identity.Areas.Administrator.Controllers
         }
 
         // POST: ProductCategoryController/Edit/5
-        [Authorize(Policy = ClaimTypesStore.EditProductCategory)]
+       // [Authorize(Policy = ClaimTypesStore.EditProductCategory)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Edit(int id, UpdateProductCategoryDto productCategory)

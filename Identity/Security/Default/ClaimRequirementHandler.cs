@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using IdentitySample.Repositories;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Identity.Security.Default
 {

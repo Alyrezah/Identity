@@ -17,5 +17,6 @@ namespace Identity.Core.Application.Contracts.Identity
         Task<ExternalLoginInfo> GetExternalLoginInfo();
         Task<CommandResponse> ExternalLogin(ExternalLoginInfo externalLoginInfo);
         Task<CommandResponse> RegisterUserWithExternalLogin(string email, ExternalLoginInfo externalLoginInfo);
+        Task RefreshCookie(string userId);
     }
 }

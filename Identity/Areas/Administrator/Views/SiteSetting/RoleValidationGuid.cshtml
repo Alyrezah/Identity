@@ -1,0 +1,36 @@
+﻿@model Identity.Core.Application.DTOs.SiteSetting.GenerateNewGuidDto
+
+@{
+    ViewData["Title"] = "RoleValidationGuid";
+    Layout = "~/Areas/Administrator/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>RoleValidationGuid</h1>
+
+<h4>GenerateNewGuid</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="RoleValidationGuid">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Value" class="control-label"></label>
+                <input readonly asp-for="Value" class="form-control" />
+                <span asp-validation-for="Value" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="LastModifiedDate" class="control-label"></label>
+                <input readonly asp-for="LastModifiedDate" class="form-control" />
+                <span asp-validation-for="LastModifiedDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+

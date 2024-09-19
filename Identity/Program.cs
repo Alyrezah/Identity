@@ -13,6 +13,8 @@ using Identity.Infrastructure.Idnetity.Services;
 using Identity.Infrastructure.Persistence;
 using Identity.Infrastructure.Persistence.Repository;
 using Identity.Security.Default;
+using Identity.Security.DynamicRole;
+using IdentitySample.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +25,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddMemoryCache();
+builder.Services.AddDataProtection();
 
 #region Db Contexts
 
@@ -48,8 +52,10 @@ builder.Services.AddTransient<IProductCategoryService, ProductCategoryService>()
 builder.Services.AddTransient<IProductService, ProductService>();
 builder.Services.AddTransient<IIdentityService, IdentityService>();
 builder.Services.AddTransient<IAccountService, AccountService>();
+builder.Services.AddTransient<ISiteSettingService, SiteSettingService>();
 
 builder.Services.AddTransient<IMessageSender, MessageSender>();
+builder.Services.AddTransient<IUtilities, Utilities>();
 
 #endregion
 
@@ -64,6 +70,18 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 }).AddEntityFrameworkStores<IdentityContext>()
     .AddDefaultTokenProviders();
 /*.AddErrorDescriber<PersianIdentityErrorDescriber>();*/
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.Cookie.Name = "IdentityProj";
+    options.LoginPath = "/Account/Login";
+    options.LogoutPath = "/Account/Logout";
+});
+
+builder.Services.Configure<SecurityStampValidatorOptions>(optins =>{
+    optins.ValidationInterval = TimeSpan.FromSeconds(5);
+});
 
 builder.Services.AddAuthentication()
     .AddGoogle(options =>
@@ -140,9 +158,14 @@ builder.Services.AddAuthorization(options =>
     {
         p.Requirements.Add(new ClaimRequirement(ClaimTypesStore.AdministratorPanel, true.ToString()));
     });
+    options.AddPolicy("DynamicRole", p =>
+    {
+        p.Requirements.Add(new DynamicRoleRequirement());
+    });
 });
 
-builder.Services.AddSingleton<IAuthorizationHandler, ClaimRequirementHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ClaimRequirementHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, DynamicRoleRequirementHandler>();
 
 #endregion
 

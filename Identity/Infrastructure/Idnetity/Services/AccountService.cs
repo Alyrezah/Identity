@@ -3,6 +3,7 @@ using Identity.Core.Application;
 using Identity.Core.Application.ClaimsStore;
 using Identity.Core.Application.Contracts.Acccount;
 using Identity.Core.Application.DTOs.Account;
+using Identity.Core.Application.DTOs.Account.Validators;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
@@ -172,9 +173,9 @@ namespace Identity.Infrastructure.Idnetity.Services
             var userClaims = await _userManager.GetClaimsAsync(user);
 
             var validClaims = userClaims.Select(x => new ClaimsDto()
-                {
-                    ClaimType = x.Type,
-                }).ToList();
+            {
+                ClaimType = x.Type,
+            }).ToList();
 
             return new ManageClaimsDto()
             {
@@ -240,6 +241,150 @@ namespace Identity.Infrastructure.Idnetity.Services
             return await _userManager.Users
                  .Where(x => x.Id == id)
                  .Select(x => x.UserName).FirstAsync();
+        }
+
+        public async Task<CommandResponse> CreateRole(CreateRoleDto command)
+        {
+            var validator = new CreateRoleValidator();
+            var validatorResult = await validator.ValidateAsync(command);
+
+            if (!validatorResult.IsValid)
+            {
+                return new CommandResponse()
+                {
+                    ErrorMessages = validatorResult.Errors.Select(x => x.ErrorMessage).ToList(),
+                    IsSuccess = false,
+                    Message = CommandMessages.CommandFailer
+                };
+            }
+
+            var role = _mapper.Map<IdentityRole>(command);
+            var result = await _roleManager.CreateAsync(role);
+            if (!result.Succeeded)
+            {
+                return new CommandResponse()
+                {
+                    ErrorMessages = result.Errors.Select(x => x.Description).ToList(),
+                    IsSuccess = false,
+                    Message = CommandMessages.CommandFailer
+                };
+            }
+
+            var selectedPath = command.SitePath.Where(x => x.IsSelected).ToList();
+            foreach (var item in selectedPath)
+            {
+                var areaName = string.IsNullOrEmpty(item.AreaName) ? "NoArea" : item.AreaName;
+                var claimsResult = await _roleManager
+                     .AddClaimAsync(role, new Claim($"{areaName}|{item.ControllerName}|{item.ActionName}".ToUpper(),
+                     true.ToString()));
+
+                if (!claimsResult.Succeeded)
+                {
+                    return new CommandResponse()
+                    {
+                        ErrorMessages = claimsResult.Errors.Select(x => x.Description).ToList(),
+                        IsSuccess = false,
+                        Message = CommandMessages.CommandFailer
+                    };
+                }
+            }
+
+            return new CommandResponse()
+            {
+                IsSuccess = true,
+                Message = CommandMessages.CommandSuccess
+            };
+        }
+
+        public async Task<ManageRoleClaimsDto> GetRoleClaimsForAddRoleClaims(string roleId, List<ActionAndControllerName> paths)
+        {
+            var role = await _roleManager.FindByIdAsync(roleId);
+
+            if (role == null)
+            {
+                return null;
+            }
+
+            var allPath = paths;
+            var roleCliams = await _roleManager.GetClaimsAsync(role);
+
+            var validRoleClaims = new List<ClaimsDto>();
+
+            foreach (var item in allPath)
+            {
+                var cliamsType = $"{item.AreaName ?? "NoArea"}|{item.ControllerName}|{item.ActionName}";
+                if (!roleCliams.Any(x => x.Type == cliamsType.ToUpper()))
+                {
+                    validRoleClaims.Add(new ClaimsDto()
+                    {
+                        ClaimType = cliamsType
+                    });
+                }
+            }
+
+            return new ManageRoleClaimsDto()
+            {
+                RoleId = role.Id,
+                _Claims = validRoleClaims,
+            };
+        }
+
+        public async Task<CommandResponse> UpdateSecurityStamp(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return new CommandResponse()
+                {
+                    IsSuccess = false,
+                    Message = CommandMessages.CommandFailer,
+                    ErrorMessages = new List<string>() { "User not found" }
+                };
+            }
+
+            await _userManager.UpdateSecurityStampAsync(user);
+
+            return new CommandResponse()
+            {
+                IsSuccess = true,
+                Message = CommandMessages.CommandSuccess,
+            };
+        }
+
+        public async Task<CommandResponse> AddCliamsToRole(ManageRoleClaimsDto command)
+        {
+            var role = await _roleManager.FindByIdAsync(command.RoleId);
+            if (role == null)
+            {
+                return new CommandResponse()
+                {
+                    IsSuccess = false,
+                    Message = CommandMessages.CommandFailer,
+                    ErrorMessages = new List<string>() { "Role not found" }
+                };
+            }
+            var selectedClaims = command._Claims.Where(x => x.IsSelected).ToList();
+            foreach (var item in selectedClaims)
+            {
+                var claimsResult = await _roleManager.AddClaimAsync(role,
+                    new Claim(item.ClaimType.ToUpper(), true.ToString()));
+
+                if (!claimsResult.Succeeded)
+                {
+                    return new CommandResponse()
+                    {
+                        ErrorMessages = claimsResult.Errors.Select(x => x.Description).ToList(),
+                        IsSuccess = false,
+                        Message = CommandMessages.CommandFailer
+                    };
+                }
+            }
+
+            return new CommandResponse()
+            {
+                IsSuccess = true,
+                Message = CommandMessages.CommandSuccess
+            };
         }
     }
 }

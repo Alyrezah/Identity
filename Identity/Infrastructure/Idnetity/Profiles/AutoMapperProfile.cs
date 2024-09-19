@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using Identity.Core.Application.DTOs.Account;
+using Identity.Core.Application.DTOs.SiteSetting;
+using Identity.Infrastructure.Idnetity.Models;
 using Microsoft.AspNetCore.Identity;
 
 namespace Identity.Infrastructure.Idnetity.Profiles
@@ -11,6 +13,8 @@ namespace Identity.Infrastructure.Idnetity.Profiles
             CreateMap<IdentityUser,RegisterAccountDto>().ReverseMap();
             CreateMap<IdentityUser,AccountDto>().ReverseMap();
             CreateMap<IdentityRole,RoleDto>().ReverseMap();
+            CreateMap<IdentityRole,CreateRoleDto>().ReverseMap();
+            CreateMap<SiteSetting,SiteSettingDto>().ReverseMap();
         }
     }
 }

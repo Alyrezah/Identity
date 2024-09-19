@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Identity.Infrastructure.Idnetity.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +11,8 @@ namespace Identity.Infrastructure.Idnetity
         {
 
         }
+
+        public DbSet<SiteSetting> SiteSetting { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -57,6 +60,15 @@ namespace Identity.Infrastructure.Idnetity
                     RoleId = "38EBD7F0-8474-4529-9357-86C7CAFE2AF8",
                     UserId = "3DB6B2DF-EADB-41FF-9DE4-434BFFB7C626"
                 });
+
+            builder.Entity<SiteSetting>()
+               .ToTable("SiteSetting");
+
+            builder.Entity<SiteSetting>()
+                .HasKey(x => x.Key);
+
+            builder.Entity<SiteSetting>()
+                .Property(x => x.Value).IsRequired();
 
             base.OnModelCreating(builder);
         }

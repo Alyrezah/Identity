@@ -1,11 +1,11 @@
 ﻿namespace Identity.Core.Application.DTOs.Account
 {
-    public class ManageClaimsDto
+    public class ManageRoleClaimsDto
     {
-        public string UserId { get; set; }
+        public string RoleId { get; set; }
         public List<ClaimsDto> _Claims { get; set; }
 
-        public ManageClaimsDto()
+        public ManageRoleClaimsDto()
         {
             _Claims = new List<ClaimsDto>();
         }

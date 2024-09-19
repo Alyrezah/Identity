@@ -288,5 +288,11 @@ namespace Identity.Infrastructure.Idnetity.Services
                 Message = CommandMessages.CommandSuccess,
             };
         }
+
+        public async Task RefreshCookie(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            await _signInManager.RefreshSignInAsync(user);
+        }
     }
 }
