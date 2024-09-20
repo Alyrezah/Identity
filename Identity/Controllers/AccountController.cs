@@ -253,6 +253,81 @@ namespace Identity.Controllers
 
         #endregion
 
+        #region Forgot Password
+
+        [HttpGet]
+        public ActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> ForgotPassword(ForgotPasswordDto forgotPassword)
+        {
+            try
+            {
+                var result = await _identityService.SendResetPasswordEmail(forgotPassword);
+                if (result.IsSuccess)
+                {
+                    ViewData["Result"] = "Email send";
+                }
+                else
+                {
+                    foreach (var error in result.ErrorMessages)
+                    {
+                        ModelState.AddModelError(string.Empty, error);
+                    }
+                }
+                return View();
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+                return View();
+            }
+        }
+
+        [HttpGet]
+        public ActionResult ResetPassword(string username, string token)
+        {
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(token))
+            {
+                return BadRequest();
+            }
+            var model = new ResetPasswordDto
+            {
+                Token = token,
+                UserName = username
+            };
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> ResetPassword(ResetPasswordDto password)
+        {
+            try
+            {
+                var result = await _identityService.ResetPassword(password);
+                if (result.IsSuccess)
+                {
+                    return RedirectToAction(nameof(Login));
+                }
+
+                foreach (var error in result.ErrorMessages)
+                {
+                    ModelState.AddModelError(string.Empty, error);
+                }
+                return View(password);
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+                return View();
+            }
+        }
+
+
+        #endregion
 
 
         public ActionResult AccessDenied()

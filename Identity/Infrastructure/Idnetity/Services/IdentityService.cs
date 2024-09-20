@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Azure.Core;
 using Identity.Core.Application;
 using Identity.Core.Application.Contracts.Identity;
 using Identity.Core.Application.Contracts.Infrastructure;
@@ -7,9 +6,6 @@ using Identity.Core.Application.DTOs.Account;
 using Identity.Core.Application.DTOs.Account.Validators;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Routing;
 
 namespace Identity.Infrastructure.Idnetity.Services
 {
@@ -40,7 +36,9 @@ namespace Identity.Infrastructure.Idnetity.Services
                     ErrorMessages = new List<string>() { "User Not Found ..." }
                 };
             }
-            await _userManager.ConfirmEmailAsync(user, token);
+
+            var result = await _userManager.ConfirmEmailAsync(user, token);
+
             return new CommandResponse()
             {
                 IsSuccess = true,
@@ -264,8 +262,8 @@ namespace Identity.Infrastructure.Idnetity.Services
             };
         }
 
-        public async Task<CommandResponse> RegisterUserWithExternalLogin(string email , 
-            RegisterWithExternalLoginDto command,ExternalLoginInfo externalLoginInfo)
+        public async Task<CommandResponse> RegisterUserWithExternalLogin(string email,
+            RegisterWithExternalLoginDto command, ExternalLoginInfo externalLoginInfo)
         {
             var user = await _userManager.FindByEmailAsync(email);
 
@@ -284,7 +282,7 @@ namespace Identity.Infrastructure.Idnetity.Services
                 }
                 await _userManager.CreateAsync(user);
             }
-            await _userManager.AddLoginAsync(user,externalLoginInfo);
+            await _userManager.AddLoginAsync(user, externalLoginInfo);
             await _signInManager.SignInAsync(user, true);
 
             return new CommandResponse()
@@ -298,6 +296,81 @@ namespace Identity.Infrastructure.Idnetity.Services
         {
             var user = await _userManager.FindByIdAsync(userId);
             await _signInManager.RefreshSignInAsync(user);
+        }
+
+        public async Task<CommandResponse> SendResetPasswordEmail(ForgotPasswordDto command)
+        {
+            var validator = new ForgotPasswordValidator();
+            var validatorResult = await validator.ValidateAsync(command);
+
+            if (!validatorResult.IsValid)
+            {
+                return new CommandResponse()
+                {
+                    ErrorMessages = validatorResult.Errors.Select(x => x.ErrorMessage).ToList(),
+                    IsSuccess = false,
+                    Message = CommandMessages.CommandFailer
+                };
+            }
+
+            var user = await _userManager.FindByEmailAsync(command.Email);
+            if (user != null)
+            {
+                var resetPasswordToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var emailLink = $"https://localhost:7040/Account/ResetPassword?username={user.UserName}&token={resetPasswordToken}";
+
+                //_messageSender.SendEmail(command.Email, "Reset Password Link", emailLink);
+            }
+
+            return new CommandResponse()
+            {
+                IsSuccess = true,
+                Message = CommandMessages.CommandSuccess,
+            };
+        }
+
+        public async Task<CommandResponse> ResetPassword(ResetPasswordDto command)
+        {
+            var validator = new ResetPasswordValidator();
+            var validatorResult = await validator.ValidateAsync(command);
+
+            if (!validatorResult.IsValid)
+            {
+                return new CommandResponse()
+                {
+                    ErrorMessages = validatorResult.Errors.Select(x => x.ErrorMessage).ToList(),
+                    IsSuccess = false,
+                    Message = CommandMessages.CommandFailer
+                };
+            }
+
+            var user = await _userManager.FindByNameAsync(command.UserName);
+            if (user == null)
+            {
+                return new CommandResponse()
+                {
+                    ErrorMessages = new List<string>() { "User not found" },
+                    IsSuccess = false,
+                    Message = CommandMessages.CommandFailer
+                };
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, command.Token, command.NewPassword);
+            if (!result.Succeeded)
+            {
+                return new CommandResponse()
+                {
+                    ErrorMessages = result.Errors.Select(x => x.Description).ToList(),
+                    IsSuccess = false,
+                    Message = CommandMessages.CommandFailer
+                };
+            }
+
+            return new CommandResponse()
+            {
+                IsSuccess = true,
+                Message = CommandMessages.CommandSuccess
+            };
         }
     }
 }

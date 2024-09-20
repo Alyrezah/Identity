@@ -18,5 +18,7 @@ namespace Identity.Core.Application.Contracts.Identity
         Task<CommandResponse> ExternalLogin(ExternalLoginInfo externalLoginInfo);
         Task<CommandResponse> RegisterUserWithExternalLogin(string email, RegisterWithExternalLoginDto command, ExternalLoginInfo externalLoginInfo);
         Task RefreshCookie(string userId);
+        Task<CommandResponse> SendResetPasswordEmail(ForgotPasswordDto command);
+        Task<CommandResponse> ResetPassword(ResetPasswordDto command);
     }
 }
