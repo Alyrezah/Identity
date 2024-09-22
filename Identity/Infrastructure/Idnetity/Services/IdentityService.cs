@@ -4,8 +4,12 @@ using Identity.Core.Application.Contracts.Identity;
 using Identity.Core.Application.Contracts.Infrastructure;
 using Identity.Core.Application.DTOs.Account;
 using Identity.Core.Application.DTOs.Account.Validators;
+using Identity.Infrastructure.Idnetity.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using System.Security.Claims;
 
 namespace Identity.Infrastructure.Idnetity.Services
 {
@@ -15,13 +19,18 @@ namespace Identity.Infrastructure.Idnetity.Services
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly IMapper _mapper;
         private readonly IMessageSender _messageSender;
+        private readonly IPhoneTotpProvider _phoneTotpProvider;
+        private readonly PhoneTotpOptions _options;
         public IdentityService(UserManager<IdentityUser> userManager, IMapper mapper,
-            SignInManager<IdentityUser> signInManager, IMessageSender messageSender)
+            SignInManager<IdentityUser> signInManager, IMessageSender messageSender, IPhoneTotpProvider phoneTotpProvider
+            , IOptions<PhoneTotpOptions> options)
         {
             _userManager = userManager;
             _mapper = mapper;
             _signInManager = signInManager;
             _messageSender = messageSender;
+            _phoneTotpProvider = phoneTotpProvider;
+            _options = options?.Value ?? new PhoneTotpOptions();
         }
 
         public async Task<CommandResponse> ConfirmEmail(string userName, string token)
@@ -370,6 +379,80 @@ namespace Identity.Infrastructure.Idnetity.Services
             {
                 IsSuccess = true,
                 Message = CommandMessages.CommandSuccess
+            };
+        }
+
+        public async Task<PhoneTotpTempDataModel> SenTotpCode(LoginWithPhoneNumberDto command)
+        {
+            var secretKey = Guid.NewGuid().ToString();
+            var totpCode = _phoneTotpProvider.GenerateTotpCode(secretKey);
+
+            var isUserExist = await _userManager.Users.AnyAsync(x => x.PhoneNumber == command.PhoneNumber);
+            if (isUserExist)
+            {
+                //TODO send code
+            }
+
+            return new PhoneTotpTempDataModel()
+            {
+                ExpirtionTime = DateTime.Now.AddSeconds(_options.StepInSeconds),
+                PhoneNumber = command.PhoneNumber,
+                SecretKey = secretKey
+            };
+        }
+
+        public async Task<CommandResponse> LoginWithPhoneNumber(VerifyTotpCodeDto command, string secretKey, string phoneNumber)
+        {
+            var user = await _userManager.Users
+                .FirstOrDefaultAsync(x => x.PhoneNumber == phoneNumber);
+
+            if (user == null)
+            {
+                return new CommandResponse()
+                {
+                    IsSuccess = false,
+                    Message = CommandMessages.CommandFailer,
+                    ErrorMessages = new List<string>() { "An error occurred during the execution of the operation" }
+                };
+            }
+
+            var result = _phoneTotpProvider.VerifyTotpCode(secretKey, command.TotpCode);
+
+            if (!result.IsSuccess)
+            {
+                if (!await _userManager.IsLockedOutAsync(user))
+                {
+                    await _userManager.AccessFailedAsync(user);
+                }
+
+                return new CommandResponse()
+                {
+                    IsSuccess = false,
+                    Message = CommandMessages.CommandFailer,
+                    ErrorMessages = new List<string>() { result.ErrorMessage }
+                };
+            }
+
+            if (await _userManager.IsLockedOutAsync(user))
+            {
+                return new CommandResponse()
+                {
+                    IsSuccess = false,
+                    Message = CommandMessages.CommandFailer,
+                    ErrorMessages = new List<string>() { "Your account is locked" }
+                };
+            }
+            var claims = new List<Claim>()
+            {
+                new Claim(ClaimTypes.MobilePhone,phoneNumber)
+            };
+            await _userManager.ResetAccessFailedCountAsync(user);
+            await _signInManager.SignInWithClaimsAsync(user, true, claims);
+
+            return new CommandResponse()
+            {
+                IsSuccess = true,
+                Message = CommandMessages.CommandSuccess,
             };
         }
     }

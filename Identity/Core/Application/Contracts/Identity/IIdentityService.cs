@@ -1,4 +1,5 @@
 ﻿using Identity.Core.Application.DTOs.Account;
+using Identity.Infrastructure.Idnetity.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 
@@ -10,6 +11,8 @@ namespace Identity.Core.Application.Contracts.Identity
         Task<bool> IsUserNameAlreadyExist(string userName);
         Task<CommandResponse> RgisterAccount(RegisterAccountDto command);
         Task<CommandResponse> LoginAccount(LoginAccountDto command);
+        Task<PhoneTotpTempDataModel> SenTotpCode(LoginWithPhoneNumberDto command);
+        Task<CommandResponse> LoginWithPhoneNumber(VerifyTotpCodeDto command, string secretKey,string phoneNumber);
         Task Logout();
         Task<CommandResponse> ConfirmEmail(string userName, string token);
         Task<List<AuthenticationScheme>> GetExternalLogins();

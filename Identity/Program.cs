@@ -9,6 +9,7 @@ using Identity.Core.Application.DTOs.ProductCategory.Validators;
 using Identity.Core.Application.Services;
 using Identity.Infrastructure;
 using Identity.Infrastructure.Idnetity;
+using Identity.Infrastructure.Idnetity.Models;
 using Identity.Infrastructure.Idnetity.Services;
 using Identity.Infrastructure.Persistence;
 using Identity.Infrastructure.Persistence.Repository;
@@ -56,6 +57,11 @@ builder.Services.AddTransient<ISiteSettingService, SiteSettingService>();
 
 builder.Services.AddTransient<IMessageSender, MessageSender>();
 builder.Services.AddTransient<IUtilities, Utilities>();
+builder.Services.AddTransient<IPhoneTotpProvider, PhoneTotpProvider>();
+builder.Services.Configure<PhoneTotpOptions>(o =>
+{
+    o.StepInSeconds = 60;
+});
 
 #endregion
 

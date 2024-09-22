@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
 using Identity.Core.Application.Contracts.Identity;
 using Identity.Core.Application.DTOs.Account;
+using Identity.Infrastructure.Idnetity.Models;
 using Identity.Models.Account;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace Identity.Controllers
 {
@@ -329,6 +331,113 @@ namespace Identity.Controllers
 
         #endregion
 
+        #region Login With Phone Number
+
+        [HttpGet]
+        public ActionResult LoginWithPhoneNumber()
+        {
+            if (User.Identity!.IsAuthenticated)
+            {
+                return RedirectToAction(actionName: "Index", controllerName: "Home");
+            }
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> LoginWithPhoneNumber(LoginWithPhoneNumberDto phobeNumber)
+        {
+            try
+            {
+                if (User.Identity!.IsAuthenticated)
+                {
+                    return RedirectToAction(actionName: "Index", controllerName: "Home");
+                }
+
+                if (TempData.ContainsKey("pttpc"))
+                {
+                    var tempData =
+                        JsonSerializer.Deserialize<PhoneTotpTempDataModel>(TempData["pttpc"].ToString());
+                    if (tempData.ExpirtionTime > DateTime.Now)
+                    {
+                        var differenceInSeconds = (int)(tempData.ExpirtionTime - DateTime.Now).TotalSeconds;
+                        ModelState.AddModelError(string.Empty, $"Please try again in {differenceInSeconds} seconds to resend the code");
+                        TempData.Keep("pttpc");
+                        return View();
+                    }
+
+                }
+
+                var result = await _identityService.SenTotpCode(phobeNumber);
+                TempData["pttpc"] = JsonSerializer.Serialize(result);
+                return RedirectToAction(nameof(VerifyLoginWithPhoneNumber));
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+                return View();
+            }
+        }
+
+        [HttpGet]
+        public ActionResult VerifyLoginWithPhoneNumber()
+        {
+            if (User.Identity!.IsAuthenticated)
+            {
+                return RedirectToAction(actionName: "Index", controllerName: "Home");
+            }
+
+            if (!TempData.ContainsKey("pttpc"))
+            {
+                return BadRequest();
+            }
+
+            var tempData =
+                       JsonSerializer.Deserialize<PhoneTotpTempDataModel>(TempData["pttpc"].ToString());
+            if (tempData.ExpirtionTime <= DateTime.Now)
+            {
+                ViewData["TotpMessages"] = "Code has expired, get a new code again";
+                return RedirectToAction(nameof(LoginWithPhoneNumber));
+            }
+            TempData.Keep("pttpc");
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> VerifyLoginWithPhoneNumber(VerifyTotpCodeDto code)
+        {
+            if (User.Identity!.IsAuthenticated)
+            {
+                return RedirectToAction(actionName: "Index", controllerName: "Home");
+            }
+
+            if (!TempData.ContainsKey("pttpc"))
+            {
+                return BadRequest();
+            }
+
+            var tempData =
+                     JsonSerializer.Deserialize<PhoneTotpTempDataModel>(TempData["pttpc"].ToString());
+            if (tempData.ExpirtionTime <= DateTime.Now)
+            {
+                ViewData["TotpMessages"] = "Code has expired, get a new code again";
+                return RedirectToAction(nameof(LoginWithPhoneNumber));
+            }
+            //code.PhoneNumber = tempData.PhoneNumber;
+            //code.SecretKey = tempData.SecretKey;
+            var result = await _identityService.LoginWithPhoneNumber(code, tempData.SecretKey, tempData.PhoneNumber);
+            if (result.IsSuccess)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            foreach (var error in result.ErrorMessages)
+            {
+                ModelState.AddModelError(string.Empty, error);
+            }
+            return View(code);
+        }
+
+        #endregion
 
         public ActionResult AccessDenied()
         {

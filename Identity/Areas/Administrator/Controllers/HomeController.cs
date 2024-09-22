@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Identity.Areas.Administrator.Controllers
 {
     [Area("Administrator")]
-    [Authorize(Policy = "DynamicRole")]
+    [Authorize(Roles = "Owner,Admin")]
     public class HomeController : Controller
     {
         public IActionResult Index()
