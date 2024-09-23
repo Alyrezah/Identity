@@ -2,7 +2,7 @@
 {
     public interface IPhoneTotpProvider
     {
-        string GenerateTotpCode(string secretKey);
-        PhoneTotpResponse VerifyTotpCode(string secretKey, string totpCode);
+        string GenerateTotpCode(byte[] secretKey);
+        PhoneTotpResponse VerifyTotpCode(byte[] secretKey, string totpCode);
     }
 }

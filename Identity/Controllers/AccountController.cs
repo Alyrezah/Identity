@@ -427,6 +427,7 @@ namespace Identity.Controllers
             var result = await _identityService.LoginWithPhoneNumber(code, tempData.SecretKey, tempData.PhoneNumber);
             if (result.IsSuccess)
             {
+                TempData.Remove("pttpc");
                 return RedirectToAction("Index", "Home");
             }
 

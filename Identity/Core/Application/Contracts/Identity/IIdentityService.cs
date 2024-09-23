@@ -12,7 +12,7 @@ namespace Identity.Core.Application.Contracts.Identity
         Task<CommandResponse> RgisterAccount(RegisterAccountDto command);
         Task<CommandResponse> LoginAccount(LoginAccountDto command);
         Task<PhoneTotpTempDataModel> SenTotpCode(LoginWithPhoneNumberDto command);
-        Task<CommandResponse> LoginWithPhoneNumber(VerifyTotpCodeDto command, string secretKey,string phoneNumber);
+        Task<CommandResponse> LoginWithPhoneNumber(VerifyTotpCodeDto command, byte[] secretKey,string phoneNumber);
         Task Logout();
         Task<CommandResponse> ConfirmEmail(string userName, string token);
         Task<List<AuthenticationScheme>> GetExternalLogins();

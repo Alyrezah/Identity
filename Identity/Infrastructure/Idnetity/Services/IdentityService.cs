@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
+using System.Security.Cryptography;
 
 namespace Identity.Infrastructure.Idnetity.Services
 {
@@ -384,7 +385,13 @@ namespace Identity.Infrastructure.Idnetity.Services
 
         public async Task<PhoneTotpTempDataModel> SenTotpCode(LoginWithPhoneNumberDto command)
         {
-            var secretKey = Guid.NewGuid().ToString();
+            //   var secretKey = Guid.NewGuid().ToString();
+            byte[] secretKey;
+            using (var rng = new RNGCryptoServiceProvider())
+            {
+                secretKey = new byte[32];
+                rng.GetBytes(secretKey);
+            }
             var totpCode = _phoneTotpProvider.GenerateTotpCode(secretKey);
 
             var isUserExist = await _userManager.Users.AnyAsync(x => x.PhoneNumber == command.PhoneNumber);
@@ -401,7 +408,7 @@ namespace Identity.Infrastructure.Idnetity.Services
             };
         }
 
-        public async Task<CommandResponse> LoginWithPhoneNumber(VerifyTotpCodeDto command, string secretKey, string phoneNumber)
+        public async Task<CommandResponse> LoginWithPhoneNumber(VerifyTotpCodeDto command, byte[] secretKey, string phoneNumber)
         {
             var user = await _userManager.Users
                 .FirstOrDefaultAsync(x => x.PhoneNumber == phoneNumber);

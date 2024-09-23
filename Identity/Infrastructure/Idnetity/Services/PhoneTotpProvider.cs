@@ -16,16 +16,16 @@ namespace Identity.Infrastructure.Idnetity.Services
             _options = options?.Value ?? new PhoneTotpOptions();
         }
 
-        public string GenerateTotpCode(string secretKey)
+        public string GenerateTotpCode(byte[] secretKey)
         {
             CreateTotp(secretKey);
             return _totp.ComputeTotp();
         }
 
-        public PhoneTotpResponse VerifyTotpCode(string secretKey, string totpCode)
+        public PhoneTotpResponse VerifyTotpCode(byte[] secretKey, string totpCode)
         {
             CreateTotp(secretKey);
-            var isValid = _totp.VerifyTotp(totpCode, out _);
+            var isValid = _totp.VerifyTotp(totpCode, out _, VerificationWindow.RfcSpecifiedNetworkDelay);
 
             if (isValid)
             {
@@ -41,9 +41,10 @@ namespace Identity.Infrastructure.Idnetity.Services
             };
         }
 
-        private void CreateTotp(string secretKey)
+        private void CreateTotp(byte[] secretKey)
         {
-            _totp = new Totp(Encoding.UTF8.GetBytes(secretKey), _options.StepInSeconds);
+            //_totp = new Totp(Encoding.UTF8.GetBytes(secretKey), _options.StepInSeconds);
+            _totp = new Totp(secretKey, _options.StepInSeconds);
         }
     }
 }
