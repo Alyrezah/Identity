@@ -9,6 +9,7 @@ using Microsoft.Extensions.Caching.Memory;
 namespace Identity.Areas.Administrator.Controllers
 {
     [Area("Administrator")]
+    [Authorize(Policy = "DynamicRole")]
     public class AccountController : Controller
     {
         private readonly IAccountService _accountService;
@@ -22,14 +23,14 @@ namespace Identity.Areas.Administrator.Controllers
         }
 
         // GET: AccountController
-        [Authorize(Policy = "AccountsList")]
+        //[Authorize(Policy = "AccountsList")]
         public async Task<ActionResult> Index()
         {
             var model = await _accountService.GetList();
             return View(model);
         }
 
-        [Authorize(Policy = "AddClaims")]
+        //[Authorize(Policy = "AddClaims")]
         public async Task<ActionResult> AddClaims(string id)
         {
             var model = await _accountService.GetClaimsForAddClaims(id);
@@ -41,7 +42,7 @@ namespace Identity.Areas.Administrator.Controllers
             return View(model);
         }
 
-        [Authorize(Policy = "AddClaims")]
+        //[Authorize(Policy = "AddClaims")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> AddClaims(ManageClaimsDto claims)
@@ -68,7 +69,7 @@ namespace Identity.Areas.Administrator.Controllers
             }
         }
 
-        [Authorize(Policy = "RemoveClaims")]
+        //[Authorize(Policy = "RemoveClaims")]
         public async Task<ActionResult> RemoveClaims(string id)
         {
             var model = await _accountService.GetClaimsForRemoveClaims(id);
@@ -80,7 +81,7 @@ namespace Identity.Areas.Administrator.Controllers
             return View(model);
         }
 
-        [Authorize(Policy = "RemoveClaims")]
+        //[Authorize(Policy = "RemoveClaims")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> RemoveClaims(ManageClaimsDto claims)
@@ -108,7 +109,7 @@ namespace Identity.Areas.Administrator.Controllers
         }
 
         // GET: AccountController/Roles
-        [Authorize(Policy = "Roles")]
+        //[Authorize(Policy = "Roles")]
         public async Task<ActionResult> Roles()
         {
             var model = await _accountService.GetRoles();
@@ -183,7 +184,7 @@ namespace Identity.Areas.Administrator.Controllers
         }
 
         // GET: AccountController/ManageUserRoles
-        [Authorize(Policy = "ManageUserRole")]
+        //[Authorize(Policy = "ManageUserRole")]
         public async Task<ActionResult> ManageUserRoles(string id)
         {
             var model = await _accountService.GetUserRoles(id);
@@ -195,7 +196,7 @@ namespace Identity.Areas.Administrator.Controllers
         }
 
         // POST: AccountController/ManageUserRoles
-        [Authorize(Policy = "ManageUserRole")]
+        //[Authorize(Policy = "ManageUserRole")]
         [HttpPost]
         public async Task<ActionResult> ManageUserRoles(AddRoleToUserDto addRoles)
         {
@@ -222,7 +223,7 @@ namespace Identity.Areas.Administrator.Controllers
         }
 
         // GET: AccountController/Details/5
-        [Authorize(Policy = "DetailAccount")]
+        //[Authorize(Policy = "DetailAccount")]
         public async Task<ActionResult> Details(string id)
         {
             var model = await _accountService.Getby(id);

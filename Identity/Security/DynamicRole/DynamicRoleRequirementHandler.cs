@@ -46,16 +46,17 @@ namespace Identity.Security.DynamicRole
                 return await _utilities.DataBaseRoleValidationGuid();
             });
 
-            /*
+
             var allAreasName = _memoryCache.GetOrCreate("allAreasName", p =>
             {
                 p.AbsoluteExpiration = DateTimeOffset.MaxValue;
                 return _utilities.GetAllAreasNames();
             });
-            */
+
 
             //Generate ClaimsType
-            SplitUserRequestedUrl(httpContext, out var areaAndControllerAndActionName);
+            SplitUserRequestedUrl(httpContext.Request.Path.ToString(), allAreasName,
+                out var areaAndControllerAndActionName);
 
             //Get Unprotected User Cookie value
             UnprotectRvgCookieData(httpContext, out var unprotectedRvgCookie);

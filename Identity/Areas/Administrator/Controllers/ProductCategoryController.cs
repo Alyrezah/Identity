@@ -1,5 +1,4 @@
-﻿using Identity.Core.Application.ClaimsStore;
-using Identity.Core.Application.Contracts;
+﻿using Identity.Core.Application.Contracts;
 using Identity.Core.Application.DTOs.ProductCategory;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
